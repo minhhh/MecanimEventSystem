@@ -544,7 +544,9 @@ public class MecanimEventEditor : EditorWindow
     private float Timeline (float time)
     {
         Rect rect = GUILayoutUtility.GetRect (500, 10000, 50, 50);
-        
+        rect.x += 100;
+        rect.width -= 200;
+
         int timelineId = GUIUtility.GetControlID (timelineHash, FocusType.Passive, rect);
         
         Rect thumbRect = new Rect (rect.x + rect.width * time - 5, rect.y + 2, 10, 10);
@@ -675,7 +677,7 @@ public class MecanimEventEditor : EditorWindow
             GUI.color = savedColor;
             
             if (hotEventKey == eventKeyCtrl || (hotEventKey == 0 && keyRect.Contains (e.mousePosition))) {
-                string labelString = string.Format ("{0}({1})@{2}", key.functionName, key.parameter, GetRealTimeOfTargetState (targetState, key.normalizedTime).ToString ("0.0000"));
+                string labelString = string.Format ("{0}({1})@{2}", key.functionName, key.parameter, GetFrameOfTargetState (targetState, key.normalizedTime).ToString ("0.0000"));
                 Vector2 size = EditorStyles.largeLabel.CalcSize (new GUIContent (labelString));
                 
                 Rect infoRect = new Rect (rect.x + rect.width * keyTime - size.x / 2, rect.y + 50, size.x, size.y);
@@ -745,6 +747,20 @@ public class MecanimEventEditor : EditorWindow
         return 0;
     }
 
+    private int GetFrameOfTargetState (AnimatorState state, float time)
+    {
+        var animationClip = state.motion as AnimationClip;
+        if (animationClip != null) {
+            return Mathf.RoundToInt (animationClip.frameRate * animationClip.length * time);
+        } else {
+            var blendTree = state.motion as BlendTree;
+            if (blendTree != null) {
+                return Mathf.RoundToInt (GetBlendTreeLengthInFrameRecursive (blendTree) * time);
+            }
+        }
+        return 0;
+    }
+
     private float GetBlendTreeLengthRecursive (BlendTree blendTree)
     {
         if (blendTree.children.Length == 0) {
@@ -753,6 +769,19 @@ public class MecanimEventEditor : EditorWindow
         var animationClip = blendTree.children [0].motion as AnimationClip;
         if (animationClip != null) {
             return animationClip.length;
+        } else {
+            return GetBlendTreeLengthRecursive (blendTree.children [0].motion as BlendTree);
+        }
+    }
+
+    private float GetBlendTreeLengthInFrameRecursive (BlendTree blendTree)
+    {
+        if (blendTree.children.Length == 0) {
+            return 0;
+        }
+        var animationClip = blendTree.children [0].motion as AnimationClip;
+        if (animationClip != null) {
+            return animationClip.length * animationClip.frameRate;
         } else {
             return GetBlendTreeLengthRecursive (blendTree.children [0].motion as BlendTree);
         }
