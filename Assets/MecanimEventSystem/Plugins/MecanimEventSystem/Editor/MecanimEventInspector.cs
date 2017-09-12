@@ -7,7 +7,7 @@ using System.Collections.Generic;
 [CustomEditor(typeof(MecanimEventData))]
 public class MecanimEventInspector : Editor {
 	// Controller -> Layer -> State
-	private Dictionary<AnimatorController, Dictionary<int, Dictionary<int, List<MecanimEvent>>>> data;
+    private Dictionary<RuntimeAnimatorController, Dictionary<int, Dictionary<int, List<MecanimEvent>>>> data;
 	
 	void OnEnable() {
 		LoadData();
@@ -51,17 +51,17 @@ public class MecanimEventInspector : Editor {
 		}
 	}
 	
-	public AnimatorController[] GetControllers() {
-		return new List<AnimatorController>(data.Keys).ToArray();
+    public RuntimeAnimatorController[] GetControllers() {
+        return new List<RuntimeAnimatorController>(data.Keys).ToArray();
 	}
 	
-	public void AddController(AnimatorController controller) {
+	public void AddController(RuntimeAnimatorController controller) {
 		if (!data.ContainsKey(controller)) {
 			data[controller] = new Dictionary<int, Dictionary<int, List<MecanimEvent>>>();
 		}
 	}
 	
-	public MecanimEvent[] GetEvents(AnimatorController controller, int layer, int stateNameHash) {
+    public MecanimEvent[] GetEvents(RuntimeAnimatorController controller, int layer, int stateNameHash) {
 		try {
 			return data[controller][layer][stateNameHash].ToArray();
 		}
@@ -70,7 +70,7 @@ public class MecanimEventInspector : Editor {
 		}
 	}
 	
-	public void SetEvents(AnimatorController controller, int layer, int stateNameHash, MecanimEvent[] events) {
+    public void SetEvents(RuntimeAnimatorController controller, int layer, int stateNameHash, MecanimEvent[] events) {
 		if (!data.ContainsKey(controller)) {
 			data[controller] = new Dictionary<int, Dictionary<int, List<MecanimEvent>>>();
 		}
@@ -86,7 +86,7 @@ public class MecanimEventInspector : Editor {
 		data[controller][layer][stateNameHash] = new List<MecanimEvent>(events);
 	}
 	
-	public void InsertEventsCopy(AnimatorController controller, int layer, int stateNameHash, MecanimEvent[] events) {
+    public void InsertEventsCopy(RuntimeAnimatorController controller, int layer, int stateNameHash, MecanimEvent[] events) {
 		
 		List<MecanimEvent> allEvents = new List<MecanimEvent>(GetEvents(controller, layer, stateNameHash));
 		
@@ -97,7 +97,7 @@ public class MecanimEventInspector : Editor {
 		SetEvents(controller, layer, stateNameHash, allEvents.ToArray());
 	}
 	
-	public Dictionary<int, Dictionary<int, MecanimEvent[]>> GetEvents(AnimatorController controller) {
+    public Dictionary<int, Dictionary<int, MecanimEvent[]>> GetEvents(RuntimeAnimatorController controller) {
 		try {
 			
 			Dictionary<int, Dictionary<int, MecanimEvent[]>> events = new Dictionary<int, Dictionary<int, MecanimEvent[]>>();
@@ -126,7 +126,7 @@ public class MecanimEventInspector : Editor {
 		}
 	}
 	
-	public void InsertControllerEventsCopy(AnimatorController controller, Dictionary<int, Dictionary<int, MecanimEvent[]>> events) {
+    public void InsertControllerEventsCopy(RuntimeAnimatorController controller, Dictionary<int, Dictionary<int, MecanimEvent[]>> events) {
 		
 		try {
 			
@@ -406,18 +406,25 @@ public class MecanimEventInspector : Editor {
 		}
 	}
 	
+    AnimatorController GetAnimatorControllerFromSerializedObject (UnityEngine.Object obj)
+    {
+        AnimatorController animatorController = obj as AnimatorController;
+        if (obj != null) {
+            return animatorController;
+        }
+        return (obj as AnimatorOverrideController).runtimeAnimatorController as AnimatorController;
+    }
+
 	private void LoadData() {
-		
 		MecanimEventData dataSource = target as MecanimEventData;
 		
-		data = new Dictionary<AnimatorController, Dictionary<int, Dictionary<int, List<MecanimEvent>>>>();
-		
+        data = new Dictionary<RuntimeAnimatorController, Dictionary<int, Dictionary<int, List<MecanimEvent>>>>();
+
 		if (dataSource.data == null || dataSource.data.Length == 0)
 			return;
-		
+
 		foreach(MecanimEventDataEntry entry in dataSource.data) {
-			
-			AnimatorController animatorController = entry.animatorController as AnimatorController;
+			RuntimeAnimatorController animatorController = entry.animatorController as RuntimeAnimatorController;
 			
 			if (animatorController == null)
 				return;
@@ -430,7 +437,7 @@ public class MecanimEventInspector : Editor {
 			}
 			
 			List<MecanimEvent> events = new List<MecanimEvent>();
-			
+
 			if (entry.events != null) {
 				foreach (MecanimEvent e in entry.events) {
 					
@@ -438,7 +445,7 @@ public class MecanimEventInspector : Editor {
 					
 				}
 			}
-			
+
 			data[animatorController][entry.layer][entry.stateNameHash] = events;
 			
 		}
@@ -451,23 +458,23 @@ public class MecanimEventInspector : Editor {
 		
 		List<MecanimEventDataEntry> entries = new List<MecanimEventDataEntry>();
 
-		foreach(AnimatorController controller in data.Keys) {
+		foreach(RuntimeAnimatorController controller in data.Keys) {
 			foreach(int layer in data[controller].Keys) {
 				foreach(int stateNameHash in data[controller][layer].Keys) {
-					
+
 					if (data[controller][layer][stateNameHash].Count == 0)
 						continue;
-					
+
 					if (!IsValidState(controller.GetInstanceID(), layer, stateNameHash)) {
 						continue;
 					}
-					
+
 					MecanimEventDataEntry entry = new MecanimEventDataEntry();
 					entry.animatorController = controller;
 					entry.layer = layer;
 					entry.stateNameHash = stateNameHash;
-					entry.events = data[controller][layer][stateNameHash].ToArray();;
-					
+					entry.events = data[controller][layer][stateNameHash].ToArray();
+
 					entries.Add(entry);
 				}
 			}
@@ -478,18 +485,30 @@ public class MecanimEventInspector : Editor {
 		EditorUtility.SetDirty(target);
 	}
 	
+    AnimatorController GetAnimatorControllerFromId (int controllerId)
+    {
+        RuntimeAnimatorController runtimeController = EditorUtility.InstanceIDToObject(controllerId) as RuntimeAnimatorController;
+        AnimatorController controller;
+        if (runtimeController is AnimatorController) {
+            controller = runtimeController as AnimatorController;
+        } else {
+            controller = (runtimeController as AnimatorOverrideController).runtimeAnimatorController as AnimatorController;
+        }
+        return controller;
+    }
+
 	public void SaveLastEditController(UnityEngine.Object controller) {
-		serializedObject.FindProperty("lastEdit").objectReferenceValue = controller;;
+        serializedObject.FindProperty("FindState(sm, stateNameHash)").objectReferenceValue = controller;
 	}
 	
-	private bool IsValidState(int controllerId, int layer, int stateNameHash) {
+    private bool IsValidState(int controllerId, int layer, int stateNameHash) {
 		if (!IsValidControllerId(controllerId))
 			return false;
-		
+
 		if (!IsValidLayer(controllerId, layer))
 			return false;
 		
-		AnimatorController controller = EditorUtility.InstanceIDToObject(controllerId) as AnimatorController;
+        AnimatorController controller = GetAnimatorControllerFromId (controllerId);
 		AnimatorStateMachine sm;
 		if (controller.layers[layer].syncedLayerIndex != -1)
 		{
@@ -505,7 +524,7 @@ public class MecanimEventInspector : Editor {
 	
 		
 	private bool IsValidControllerId(int controllerId) {
-		AnimatorController controller = EditorUtility.InstanceIDToObject(controllerId) as AnimatorController;
+        AnimatorController controller = GetAnimatorControllerFromId(controllerId);
 		
 		if (controller == null)
 			return false;
@@ -514,7 +533,7 @@ public class MecanimEventInspector : Editor {
 	}
 	
 	private bool IsValidLayer(int controllerId, int layer) {
-		AnimatorController controller = EditorUtility.InstanceIDToObject(controllerId) as AnimatorController;
+        AnimatorController controller = GetAnimatorControllerFromId(controllerId);
 		
 		if (controller == null)
 			return false;

@@ -20,8 +20,8 @@ public class MecanimEventEditor : EditorWindow
     public static MecanimEvent clipboard;
     public static MecanimEvent[] stateClipboard;
     public static Dictionary<int, Dictionary<int, MecanimEvent[]>> controllerClipboard;
-    
-    private AnimatorController targetController;
+
+    private RuntimeAnimatorController targetController;
     private AnimatorStateMachine targetStateMachine;
     private AnimatorState targetState;
     private MecanimEvent targetEvent;
@@ -88,11 +88,20 @@ public class MecanimEventEditor : EditorWindow
         MecanimEventEditorPopup.Destroy ();
     }
 
+    AnimatorControllerParameter[] GetParametersFromController (RuntimeAnimatorController runtimeAnimatorController)
+    {
+        if (runtimeAnimatorController is AnimatorController) {
+            return (runtimeAnimatorController as AnimatorController).parameters;
+        } else {
+            return ((runtimeAnimatorController as AnimatorOverrideController).runtimeAnimatorController as AnimatorController).parameters;
+        }
+    }
+
     public KeyValuePair<string, EventConditionParamTypes>[] GetConditionParameters ()
     {
         List<KeyValuePair<string, EventConditionParamTypes>> ret = new List<KeyValuePair<string, EventConditionParamTypes>> ();
         if (targetController != null) {
-            foreach (AnimatorControllerParameter animatorParam in targetController.parameters) {
+            foreach (AnimatorControllerParameter animatorParam in GetParametersFromController (targetController)) {
                 switch (animatorParam.type) {
                 case AnimatorControllerParameterType.Float:        // float
                     ret.Add (new KeyValuePair<string, EventConditionParamTypes> (animatorParam.name, EventConditionParamTypes.Float));
@@ -119,7 +128,7 @@ public class MecanimEventEditor : EditorWindow
 
     Vector2 controllerPanelScrollPos;
     int selectedController = 0;
-    AnimatorController controllerToAdd;
+    RuntimeAnimatorController controllerToAdd;
 
     void DrawControllerPanel ()
     {
@@ -130,8 +139,8 @@ public class MecanimEventEditor : EditorWindow
         GUILayout.BeginHorizontal ();
         {
             
-            controllerToAdd = EditorGUILayout.ObjectField (controllerToAdd, typeof(AnimatorController), false) as AnimatorController;
-            
+            controllerToAdd = EditorGUILayout.ObjectField (controllerToAdd, typeof(RuntimeAnimatorController), false) as RuntimeAnimatorController;
+
             EditorGUI.BeginDisabledGroup (controllerToAdd == null);
             
             if (GUILayout.Button ("Add", GUILayout.ExpandWidth (true), GUILayout.Height (16))) {
@@ -152,7 +161,7 @@ public class MecanimEventEditor : EditorWindow
         GUILayout.BeginVertical ("Box");
         controllerPanelScrollPos = GUILayout.BeginScrollView (controllerPanelScrollPos);
         
-        AnimatorController[] controllers = eventInspector.GetControllers ();
+        RuntimeAnimatorController[] controllers = eventInspector.GetControllers ();
             
         string[] controllerNames = new string[controllers.Length];
         
@@ -168,7 +177,7 @@ public class MecanimEventEditor : EditorWindow
             
             targetController = controllers [selectedController];
             
-            eventInspector.SaveLastEditController (targetController);
+//            eventInspectorSaveLastEditController (targetController);
             
         } else {
             targetController = null;
@@ -186,6 +195,15 @@ public class MecanimEventEditor : EditorWindow
         
     }
 
+    AnimatorControllerLayer[] GetLayersFromController (RuntimeAnimatorController runtimeAnimatorController)
+    {
+        if (runtimeAnimatorController is AnimatorController) {
+            return (runtimeAnimatorController as AnimatorController).layers;
+        } else {
+            return ((runtimeAnimatorController as AnimatorOverrideController).runtimeAnimatorController as AnimatorController).layers;
+        }
+    }
+
     Vector2 layerPanelScrollPos;
     int selectedLayer = 0;
 
@@ -197,12 +215,12 @@ public class MecanimEventEditor : EditorWindow
         GUILayout.BeginVertical (GUILayout.Width (200));
         
         if (targetController != null) {
-        
-            int layerCount = targetController.layers.Length;    
+            AnimatorControllerLayer[] targetLayers = GetLayersFromController (targetController);
+            int layerCount = targetLayers.Length;    
             GUILayout.Label (layerCount + " layer(s) in selected controller");
 
             if (Event.current.type == EventType.Layout || layers == null) {
-                layers = targetController.layers;
+                layers = targetLayers;
             }
 
             GUILayout.BeginVertical ("Box");
@@ -677,7 +695,7 @@ public class MecanimEventEditor : EditorWindow
             GUI.color = savedColor;
             
             if (hotEventKey == eventKeyCtrl || (hotEventKey == 0 && keyRect.Contains (e.mousePosition))) {
-                string labelString = string.Format ("{0}({1})@{2}", key.functionName, key.parameter, GetFrameOfTargetState (targetState, key.normalizedTime).ToString ("0.0000"));
+                string labelString = string.Format ("{0}({1})@{2}", key.functionName, key.parameter, GetFrameOfTargetState (targetState, key.normalizedTime).ToString ());
                 Vector2 size = EditorStyles.largeLabel.CalcSize (new GUIContent (labelString));
                 
                 Rect infoRect = new Rect (rect.x + rect.width * keyTime - size.x / 2, rect.y + 50, size.x, size.y);

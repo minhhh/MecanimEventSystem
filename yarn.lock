@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"UBootstrap.Core@ssh://github.com/minhhh/UBootstrap.Core#v0.0.15":
-  version "0.0.15"
-  resolved "ssh://github.com/minhhh/UBootstrap.Core#e1cc5e3b6c618d38806ff023c20dfd6834ac4305"
+"UBootstrap.Core@ssh://github.com/minhhh/UBootstrap.Core#v0.0.16":
+  version "0.0.16"
+  resolved "ssh://github.com/minhhh/UBootstrap.Core#307fc18cf079f108e7fbc9cff8da89a350cc9464"
   dependencies:
     minimist "ssh://github.com/substack/minimist.git#0.0.8"
     mkdirp "ssh://github.com/substack/node-mkdirp.git#0.5.1"

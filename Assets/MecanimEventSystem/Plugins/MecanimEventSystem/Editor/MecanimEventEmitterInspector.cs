@@ -21,15 +21,18 @@ public class MecanimEventEmitterInspector : Editor
 		
         EditorGUILayout.PropertyField (animator);
 		
-        if (animator.objectReferenceValue != null) {
-            AnimatorController animatorController = AnimatorControllerExtension.GetEffectiveAnimatorController ((Animator)animator.objectReferenceValue);
-            controller.objectReferenceValue = animatorController;
-        } else {
-            controller.objectReferenceValue = null;
+        if (GUILayout.Button ("Auto Fill")) {
+            if (animator.objectReferenceValue != null) {
+                AnimatorController animatorController = AnimatorControllerExtension.GetEffectiveAnimatorController ((Animator)animator.objectReferenceValue);
+                controller.objectReferenceValue = animatorController;
+            } else {
+                controller.objectReferenceValue = null;
+            }
         }
 		
-        EditorGUILayout.ObjectField ("AnimatorController", controller.objectReferenceValue, typeof(AnimatorController), false);
+        EditorGUILayout.PropertyField (controller);
 		
+
         serializedObject.ApplyModifiedProperties ();
     }
 }

@@ -22,6 +22,11 @@ namespace UBootstrap
             return Mathf.Abs (a - b) < Mathf.Epsilon;
         }
 
+        public static bool ApproximatelyEqual (double a, double b)
+        {
+            return Abs (a - b) < Mathf.Epsilon;
+        }
+
         public static double Abs (double d)
         {
             return d > 0 ? d : -d;

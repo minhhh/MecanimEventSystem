@@ -44,7 +44,7 @@ public class MecanimEventEmitterWithData : MonoBehaviour
 
     void Update ()
     {
-        if (mecanimEventHandler == null) {
+        if (mecanimEventHandler == null || animatorController == null) {
             return;
         }
 

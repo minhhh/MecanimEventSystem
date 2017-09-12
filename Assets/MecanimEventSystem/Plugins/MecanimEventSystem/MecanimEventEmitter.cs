@@ -35,7 +35,7 @@ public class MecanimEventEmitter : MonoBehaviour
 
     void Update ()
     {
-        if (mecanimEventHandler == null) {
+        if (mecanimEventHandler == null || animatorController == null) {
             return;
         }
 

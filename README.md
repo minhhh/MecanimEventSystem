@@ -8,6 +8,10 @@ To include MecanimEventSystem into your project, you can use `npm` method of uni
 
 ## Changelog
 
+**0.0.3**
+
+* Add support for `AnimatorOverrideController`
+
 **0.0.2**
 
 * Make Event displayed in Frame unit instead of realtime.
