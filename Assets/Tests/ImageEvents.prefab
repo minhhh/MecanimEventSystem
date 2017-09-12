@@ -58,7 +58,7 @@ MonoBehaviour:
     stateNameHash: -436882359
     events:
     - functionName: OnAnimationUpdate
-      normalizedTime: 0.21680877
+      normalizedTime: 0.4722222
       paramType: 1
       intParam: 0
       floatParam: 0
