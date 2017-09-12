@@ -1,6 +1,6 @@
 {
   "name": "MecanimEventSystem",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "An event system for Unity Mecanim animation system",
   "main": "index.js",
   "files": [

@@ -29,6 +29,8 @@ public class MecanimEventSetupHelperInspector : Editor
                     .Select (x => x.GetComponent <MecanimEventData> ())
                     .Where (x => x != null)
                     .ToArray ();
+            EditorUtility.SetDirty (target);
+            AssetDatabase.SaveAssets ();
         }
 
         serializedObject.ApplyModifiedProperties ();

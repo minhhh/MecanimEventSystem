@@ -25,6 +25,7 @@ public class MecanimEventEditor : EditorWindow
     private AnimatorStateMachine targetStateMachine;
     private AnimatorState targetState;
     private MecanimEvent targetEvent;
+    protected List<KeyValuePair<AnimationClip, AnimationClip>> overrides;
     
     private List<MecanimEvent> displayEvents;
 
@@ -176,7 +177,14 @@ public class MecanimEventEditor : EditorWindow
         if (selectedController >= 0 && selectedController < controllers.Length) {
             
             targetController = controllers [selectedController];
-            
+
+            if (targetController is AnimatorOverrideController) {
+                overrides = new List<KeyValuePair<AnimationClip, AnimationClip>> (((AnimatorOverrideController)targetController).overridesCount);
+                ((AnimatorOverrideController)targetController).GetOverrides (overrides);
+            } else {
+                overrides = null;
+            }
+
 //            eventInspectorSaveLastEditController (targetController);
             
         } else {
@@ -755,6 +763,7 @@ public class MecanimEventEditor : EditorWindow
     {
         var animationClip = state.motion as AnimationClip;
         if (animationClip != null) {
+            animationClip = GetOverridenAnimationClip (animationClip);
             return animationClip.length * time;
         } else {
             var blendTree = state.motion as BlendTree;
@@ -768,7 +777,9 @@ public class MecanimEventEditor : EditorWindow
     private int GetFrameOfTargetState (AnimatorState state, float time)
     {
         var animationClip = state.motion as AnimationClip;
+
         if (animationClip != null) {
+            animationClip = GetOverridenAnimationClip (animationClip);
             return Mathf.RoundToInt (animationClip.frameRate * animationClip.length * time);
         } else {
             var blendTree = state.motion as BlendTree;
@@ -786,6 +797,7 @@ public class MecanimEventEditor : EditorWindow
         }
         var animationClip = blendTree.children [0].motion as AnimationClip;
         if (animationClip != null) {
+            animationClip = GetOverridenAnimationClip (animationClip);
             return animationClip.length;
         } else {
             return GetBlendTreeLengthRecursive (blendTree.children [0].motion as BlendTree);
@@ -799,10 +811,24 @@ public class MecanimEventEditor : EditorWindow
         }
         var animationClip = blendTree.children [0].motion as AnimationClip;
         if (animationClip != null) {
+            animationClip = GetOverridenAnimationClip (animationClip);
             return animationClip.length * animationClip.frameRate;
         } else {
             return GetBlendTreeLengthRecursive (blendTree.children [0].motion as BlendTree);
         }
+    }
+
+    private AnimationClip GetOverridenAnimationClip (AnimationClip animationClip)
+    {
+        if (overrides == null) {
+            return animationClip;
+        }
+        foreach (var kv in overrides) {
+            if (kv.Key == animationClip) {
+                return kv.Value;
+            }
+        }
+        return animationClip;
     }
 
     private List<AnimatorState> GetStates (AnimatorStateMachine sm)
