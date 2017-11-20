@@ -17,6 +17,19 @@ public class MecanimEventEmitterWithData : MonoBehaviour
 
     void Awake ()
     {
+        Initialize ();
+    }
+
+    public void Initialize (RuntimeAnimatorController animatorController, MecanimEventData mecanimEventData)
+    {
+        this.animatorController = animatorController;
+        this.data = mecanimEventData;
+        Initialize ();
+    }
+
+    public void Initialize ()
+    {
+        this.enabled = true;
         if (animator == null) {
             Debug.LogWarning (string.Format ("GameObject:{0} cannot find animator component.", this.transform.name));
             this.enabled = false;
@@ -24,7 +37,7 @@ public class MecanimEventEmitterWithData : MonoBehaviour
         }
 
         if (animatorController == null) {
-            Debug.LogWarning ("Please assgin animator in editor. Add emitter at runtime is not currently supported.");
+            Debug.LogWarning ("Please assign animator in editor. Add emitter at runtime is not currently supported.");
             this.enabled = false;
             return;
         }
@@ -40,7 +53,6 @@ public class MecanimEventEmitterWithData : MonoBehaviour
             this.enabled = false;
             return;
         }
-
         SetData (data);
     }
 

@@ -8,6 +8,10 @@ To include MecanimEventSystem into your project, you can use `npm` method of uni
 
 ## Changelog
 
+**0.0.6**
+
+* Improve `MecanimEventEmitterWithData` to allow for setting data dynamically
+
 **0.0.5**
 
 * Fix: Getting incorrect clip from AnimatorOverrideController

@@ -20,7 +20,7 @@ public class MecanimEventEmitter : MonoBehaviour
         }
 
         if (animatorController == null) {
-            Debug.LogWarning ("Please assgin animator in editor. Add emitter at runtime is not currently supported.");
+            Debug.LogWarning ("Please assign animator in editor. Add emitter at runtime is not currently supported.");
             this.enabled = false;
             return;
         }
